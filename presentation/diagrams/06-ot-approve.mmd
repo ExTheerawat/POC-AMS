@@ -1,0 +1,18 @@
+flowchart TB
+    START["ใบ OT (หลายคน)<br/>ผู้อนุมัติเปิด Dialog เลือกรายชื่อ"]:::start --> BTN{"กดปุ่มอะไร?"}:::dec
+
+    BTN -->|"✓ อนุมัติ"| AP["ติ๊ก → APPROVED<br/>ไม่ติ๊ก → ลบออกจากใบ OT"]:::ok
+    BTN -->|"✗ ปฏิเสธ"| RJ["ติ๊ก → REJECTED (มี audit)<br/>ไม่ติ๊ก → ผ่าน (APPROVED)"]:::rej
+
+    AP --> CHK{"เหลือคน<br/>APPROVED ?"}:::dec
+    RJ --> CHK
+
+    CHK -->|"มี"| CONT["OT เดินตาม Workflow<br/>Office จบ / ผลิต รอ Step ถัดไป"]:::contbox
+    CHK -->|"ไม่มี"| CANCEL["OT → REJECTED ทั้งใบ"]:::cancel
+
+    classDef start fill:#1E3A5F,stroke:#1E3A5F,color:#FFFFFF
+    classDef dec fill:#B7791F,stroke:#B7791F,color:#FFFFFF
+    classDef ok fill:#166534,stroke:#166534,color:#FFFFFF
+    classDef rej fill:#991B1B,stroke:#991B1B,color:#FFFFFF
+    classDef contbox fill:#EFF6FF,stroke:#2C5282,color:#111827
+    classDef cancel fill:#6B7280,stroke:#6B7280,color:#FFFFFF

@@ -1,0 +1,25 @@
+flowchart TB
+    subgraph PROD["Production Workflow — 3 Step"]
+        direction LR
+        P1["หัวหน้า<br/>สร้าง"]:::actor --> P2["ผจก.แผนก<br/>Step 1"]:::actor2 --> P3["ผจก.โรงงาน<br/>Step 2"]:::actor2 --> P4["APPROVED"]:::ok
+    end
+
+    FAST["HR Fast-track — ข้ามทุก step → APPROVED ทันที"]:::note
+
+    subgraph CANCEL["Cancel Workflow — ขอยกเลิกหลังอนุมัติแล้ว"]
+        direction LR
+        C1["เจ้าของใบ<br/>ขอยกเลิก"]:::actor --> C2["ระบุเหตุผล<br/>(required)"]:::warn --> C3{"HR Admin<br/>Review"}:::dec
+        C3 -->|"Approve"| C4["CANCELLED<br/>คืน Balance"]:::ok
+        C3 -->|"Reject"| C5["ใบลายังคง<br/>APPROVED"]:::rej
+    end
+
+    PROD -.-> FAST
+    FAST -.-> CANCEL
+
+    classDef actor fill:#2C5282,stroke:#2C5282,color:#FFFFFF
+    classDef actor2 fill:#1E3A5F,stroke:#1E3A5F,color:#FFFFFF
+    classDef dec fill:#B7791F,stroke:#B7791F,color:#FFFFFF
+    classDef ok fill:#166534,stroke:#166534,color:#FFFFFF
+    classDef rej fill:#991B1B,stroke:#991B1B,color:#FFFFFF
+    classDef warn fill:#FEF3C7,stroke:#B7791F,color:#111827
+    classDef note fill:#FEF3C7,stroke:#B7791F,color:#111827

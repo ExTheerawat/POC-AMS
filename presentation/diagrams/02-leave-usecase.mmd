@@ -1,0 +1,35 @@
+flowchart LR
+    subgraph SUP["▌ Supervisor"]
+        direction TB
+        a1(["สร้างใบลา (proxy)"]):::s
+        a2(["ลาครึ่งวัน เช้า/บ่าย"]):::s
+        a3(["ดูสิทธิ์ลูกน้องทั้งทีม"]):::s
+        a4(["ขอยกเลิกใบลา"]):::s
+    end
+    subgraph DM["▌ Dept Manager"]
+        direction TB
+        b1(["อนุมัติ Step 1"]):::n
+        b2(["ปฏิเสธ + เหตุผล"]):::n
+        b3(["Bulk Approve / Reject"]):::n
+        b4(["ดูสิทธิ์ลูกน้อง"]):::n
+    end
+    subgraph FM["▌ Factory Manager"]
+        direction TB
+        c1(["อนุมัติ Step 2 (ผลิต)"]):::n
+        c2(["ปฏิเสธ + เหตุผล"]):::n
+    end
+    subgraph HR["▌ HR Admin"]
+        direction TB
+        d1(["อนุมัติยกเลิก + คืนสิทธิ์"]):::g
+        d2(["จัดการ Master Data"]):::g
+        d3(["Export Excel + Reports"]):::g
+        d4(["HR Fast-track อนุมัติ"]):::g
+    end
+
+    classDef s fill:#EFF6FF,stroke:#2C5282,stroke-width:1.5px,color:#111827
+    classDef n fill:#EEF2F7,stroke:#1E3A5F,stroke-width:1.5px,color:#111827
+    classDef g fill:#FFF7E6,stroke:#B7791F,stroke-width:1.5px,color:#111827
+    style SUP fill:#FFFFFF,stroke:#2C5282,stroke-width:2px,color:#1E3A5F
+    style DM fill:#FFFFFF,stroke:#1E3A5F,stroke-width:2px,color:#1E3A5F
+    style FM fill:#FFFFFF,stroke:#1E3A5F,stroke-width:2px,color:#1E3A5F
+    style HR fill:#FFFFFF,stroke:#B7791F,stroke-width:2px,color:#B7791F

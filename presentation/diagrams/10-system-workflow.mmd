@@ -1,0 +1,32 @@
+flowchart TB
+    LOGIN["เข้าสู่ระบบ — Role-based (5 สิทธิ์)"]:::start
+    LOGIN --> CREATE["หัวหน้าสร้างใบลา / ใบ OT แทนพนักงาน<br/>เลือกพนักงาน · วันลา หรือ กะ · สายรถ"]:::actor
+    CREATE --> CUT{"ผ่าน Cut-off Time ?"}:::dec
+    CUT -->|"เกินเวลา"| BLOCK["ถูกระงับ — ติดต่อ HR"]:::cancel
+    CUT -->|"ทัน"| SIDE{"พนักงานฝ่ายไหน ?"}:::dec
+
+    SIDE -->|"Office"| O1["ผจก.แผนก · อนุมัติ (Step 1)"]:::navy
+    SIDE -->|"Production"| P1["ผจก.แผนก · Step 1"]:::navy
+    P1 --> P2["ผจก.โรงงาน · Step 2"]:::navy
+
+    O1 --> DEC{"ผลการพิจารณา"}:::dec
+    P2 --> DEC
+
+    DEC -->|"ปฏิเสธ + เหตุผล"| REJ["REJECTED + comment"]:::rej
+    DEC -->|"อนุมัติ"| APP["APPROVED — ใบมีผล"]:::ok
+    CREATE -. "ยกเลิกก่อนอนุมัติ" .-> CAN["CANCELLED — ไม่หักวันลา"]:::cancel
+
+    APP --> REP["รายงาน + Export Excel → Payroll / KPI"]:::gold
+    APP -. "ขอยกเลิกหลังอนุมัติ" .-> HRREV{"HR Review"}:::dec
+    HRREV -->|"Reject"| APP
+    HRREV -->|"Approve"| CAN2["CANCELLED — คืน Balance"]:::cancel
+
+    classDef start fill:#0F1F3D,stroke:#0F1F3D,color:#FFFFFF
+    classDef actor fill:#2C5282,stroke:#2C5282,color:#FFFFFF
+    classDef navy fill:#1E3A5F,stroke:#1E3A5F,color:#FFFFFF
+    classDef dec fill:#B7791F,stroke:#B7791F,color:#FFFFFF
+    classDef ok fill:#166534,stroke:#166534,color:#FFFFFF
+    classDef rej fill:#991B1B,stroke:#991B1B,color:#FFFFFF
+    classDef cancel fill:#6B7280,stroke:#6B7280,color:#FFFFFF
+    classDef gold fill:#B7791F,stroke:#8a5d14,color:#FFFFFF
+    linkStyle default stroke:#6B7280,stroke-width:1.25px

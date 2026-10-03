@@ -1,0 +1,20 @@
+flowchart LR
+    START(["เริ่ม"]):::se --> SUP["หัวหน้า<br/>สร้างใบลา"]:::actor
+    SUP -->|"Email แจ้ง ผจก. + CC HR"| MGR{"ผจก.แผนก<br/>พิจารณา"}:::dec
+    MGR -->|"อนุมัติ"| APP["APPROVED<br/>ใบลามีผล"]:::ok
+    MGR -->|"ปฏิเสธ + เหตุผล"| REJ["REJECTED<br/>+ เหตุผล + comment"]:::rej
+    APP -->|"Email ผู้สร้าง + พนักงาน + CC HR"| E1(["จบ"]):::se
+    REJ -->|"Email ผู้สร้าง + CC HR"| E2(["จบ"]):::se
+
+    SUP -.->|"ยกเลิกก่อนอนุมัติ<br/>(เจ้าของ / Admin)"| CAN["CANCELLED<br/>ไม่หักวันลา"]:::cancel
+    CAN -.->|"Email + CC HR"| E3(["จบ"]):::se
+
+    BULK["Bulk Approve / Reject<br/>เลือกหลายใบพร้อมกัน — ลดการคลิก"]:::note -.-> MGR
+
+    classDef se fill:#1E3A5F,stroke:#1E3A5F,color:#FFFFFF
+    classDef actor fill:#2C5282,stroke:#2C5282,color:#FFFFFF
+    classDef dec fill:#B7791F,stroke:#B7791F,color:#FFFFFF
+    classDef ok fill:#166534,stroke:#166534,color:#FFFFFF
+    classDef rej fill:#991B1B,stroke:#991B1B,color:#FFFFFF
+    classDef cancel fill:#6B7280,stroke:#6B7280,color:#FFFFFF
+    classDef note fill:#FEF3C7,stroke:#B7791F,color:#111827

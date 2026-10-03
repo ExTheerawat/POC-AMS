@@ -1,0 +1,7 @@
+export type UserRole = "SUPERVISOR" | "DEPT_MANAGER" | "FACTORY_MANAGER" | "HR_ADMIN" | "SYSTEM_ADMIN";
+export type Side = "OFFICE" | "PRODUCTION";
+export type LeaveStatus = "DRAFT" | "PENDING_DEPT_MGR" | "PENDING_FACTORY_MGR" | "APPROVED" | "REJECTED" | "CANCELLED";
+export type OTStatus = "DRAFT" | "PENDING_DEPT_MGR" | "PENDING_FACTORY_MGR" | "APPROVED" | "COMPLETED" | "REJECTED" | "CANCELLED" | "MODIFIED_BY_HR";
+export type ApprovalAction = "APPROVE" | "REJECT";
+
+export const USER_ROLES: UserRole[] = ["SUPERVISOR", "DEPT_MANAGER", "FACTORY_MANAGER", "HR_ADMIN", "SYSTEM_ADMIN"];

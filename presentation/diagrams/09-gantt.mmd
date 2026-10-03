@@ -1,0 +1,19 @@
+gantt
+    title AMS Implementation Timeline  (ประมาณ 4.5 - 5.5 เดือน)
+    dateFormat YYYY-MM-DD
+    axisFormat %b %d
+    todayMarker off
+
+    section Discovery
+    Requirements & Discovery      :p1, 2026-01-05, 2w
+
+    section Build
+    Setup + Schema + Auth         :p2, after p1, 3w
+    Leave Module                  :p3, after p2, 4w
+    OT Module                     :p4, after p3, 4w
+    Reports + Master + Email      :p5, after p4, 3w
+
+    section QA & Launch
+    Testing + UAT                 :p6, after p5, 3w
+    Migration + Training          :p7, after p6, 2w
+    Go-Live                       :milestone, m1, after p7, 0d

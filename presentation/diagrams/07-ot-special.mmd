@@ -1,0 +1,21 @@
+flowchart TB
+    subgraph CROSS["Cross-department OT Request"]
+        direction LR
+        X1["หัวหน้า A<br/>เลือกพนักงาน แผนก A + B"]:::actor --> X2["สร้างใบ OT"]:::navy
+        X2 --> X3["ผจก.แผนก A<br/>อนุมัติ (Standard Flow)"]:::ok
+        X2 -.->|"FYI Email"| X4["ผจก.แผนก B<br/>รับทราบ — ไม่ต้อง approve"]:::warn
+    end
+
+    subgraph MEMO["Memo — ไม่มาทำ OT"]
+        direction LR
+        M1["หัวหน้า / HR<br/>ระบุคนที่ไม่มา"]:::actor --> M2["attended = false"]:::navy
+        M2 --> M3["ตัดออกจาก<br/>รายงานชั่วโมง OT"]:::navy
+        M3 --> M4["Email แจ้ง HR<br/>เพื่อ payroll ถูกต้อง"]:::ok
+    end
+
+    CROSS -.-> MEMO
+
+    classDef actor fill:#B7791F,stroke:#B7791F,color:#FFFFFF
+    classDef navy fill:#1E3A5F,stroke:#1E3A5F,color:#FFFFFF
+    classDef ok fill:#166534,stroke:#166534,color:#FFFFFF
+    classDef warn fill:#FEF3C7,stroke:#B7791F,color:#111827

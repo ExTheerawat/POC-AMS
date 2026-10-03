@@ -1,0 +1,314 @@
+// Attendance Management System - Prisma Schema for SQL Server
+// Note: SQL Server doesn't support Prisma enums → using string literals validated at app level
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+// Constants (string literals) - validated at app level
+// UserRole: SUPERVISOR | DEPT_MANAGER | FACTORY_MANAGER | HR_ADMIN | SYSTEM_ADMIN
+// Side: OFFICE | PRODUCTION
+// LeaveStatus: DRAFT | PENDING_DEPT_MGR | PENDING_FACTORY_MGR | APPROVED | REJECTED | CANCELLED
+// OTStatus: DRAFT | PENDING_DEPT_MGR | PENDING_FACTORY_MGR | APPROVED | COMPLETED | CANCELLED | MODIFIED_BY_HR
+// ApprovalAction: APPROVE | REJECT
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  role         String   // UserRole
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  employee     Employee?
+}
+
+model Department {
+  id              String     @id @default(cuid())
+  code            String     @unique
+  name            String
+  side            String     // Side
+  managerId       String?
+  manager         Employee?  @relation("DeptManager", fields: [managerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employees       Employee[] @relation("DeptEmployees")
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+model Employee {
+  id            String     @id @default(cuid())
+  employeeCode  String     @unique
+  firstName     String
+  lastName      String
+  email         String     @unique
+  position      String?
+  side          String     // Side
+  departmentId  String?
+  department    Department? @relation("DeptEmployees", fields: [departmentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supervisorId  String?
+  supervisor    Employee?  @relation("Supervisor", fields: [supervisorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subordinates  Employee[] @relation("Supervisor")
+  hireDate      DateTime
+  isActive      Boolean    @default(true)
+  userId        String?    @unique
+  user          User?      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Default bus route used to pre-fill OT entries (override per-OT still allowed).
+  defaultBusRouteId String?
+  defaultBusRoute   BusRoute? @relation("EmployeeDefaultBusRoute", fields: [defaultBusRouteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  managedDepts  Department[] @relation("DeptManager")
+  leaveBalances LeaveBalance[]
+  leaveRequests LeaveRequest[] @relation("LeaveEmployee")
+  createdLeaves LeaveRequest[] @relation("LeaveCreator")
+  otCreated     OTRequest[]    @relation("OTCreator")
+  otAssigned    OTRequestEmployee[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+model LeaveType {
+  id               String   @id @default(cuid())
+  code             String   @unique
+  name             String
+  daysPerYear      Float    @default(0)
+  hasProRate       Boolean  @default(false)
+  canCarryOver     Boolean  @default(false)
+  color            String?  @default("#3b82f6")
+  isPaid           Boolean  @default(true)
+  includesHolidays Boolean  @default(false)
+  maxDays          Float?
+  note             String?  @db.NVarChar(Max)
+  isActive         Boolean  @default(true)
+  balances         LeaveBalance[]
+  requests         LeaveRequest[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model VacationTier {
+  id                String   @id @default(cuid())
+  daysOfServiceFrom Int      @unique
+  vacationDays      Int
+  note              String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model LeaveBalance {
+  id            String    @id @default(cuid())
+  employeeId    String
+  employee      Employee  @relation(fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  leaveTypeId   String
+  leaveType     LeaveType @relation(fields: [leaveTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  year          Int
+  totalDays     Float     @default(0)
+  usedDays      Float     @default(0)
+  carriedOver   Float     @default(0)
+  remainingDays Float     @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([employeeId, leaveTypeId, year])
+}
+
+model LeaveRequest {
+  id             String      @id @default(cuid())
+  requestNo      String      @unique
+  employeeId     String
+  employee       Employee    @relation("LeaveEmployee", fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  creatorId      String
+  creator        Employee    @relation("LeaveCreator", fields: [creatorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  leaveTypeId    String
+  leaveType      LeaveType   @relation(fields: [leaveTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  startDate      DateTime    // first selected day (for sorting + backward compat)
+  endDate        DateTime    // last selected day (for sorting + backward compat)
+  /// JSON array of "YYYY-MM-DD" strings — set ONLY for multi-date (non-contiguous) leaves.
+  /// If null/empty → treat as a contiguous range from startDate to endDate.
+  selectedDates  String?     @db.NVarChar(Max)
+  /// "MORNING" | "AFTERNOON" — null = full day(s). Only meaningful when totalDays = 0.5.
+  halfDayType    String?
+  totalDays      Float
+  reason         String?     @db.NVarChar(Max)
+  hasAttachment  Boolean     @default(false)
+  attachmentNote String?     @db.NVarChar(Max)
+  status         String      @default("PENDING_DEPT_MGR") // LeaveStatus
+  side           String      // Side
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  approvals      LeaveApproval[]
+  cancellations  LeaveCancellation[]
+}
+
+model LeaveCancellation {
+  id              String       @id @default(cuid())
+  leaveRequestId  String
+  leaveRequest    LeaveRequest @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+  requestedById   String
+  reason          String       @db.NVarChar(Max)
+  status          String       @default("PENDING") // PENDING | APPROVED | REJECTED
+  hrComment       String?      @db.NVarChar(Max)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model LeaveApproval {
+  id             String         @id @default(cuid())
+  leaveRequestId String
+  leaveRequest   LeaveRequest   @relation(fields: [leaveRequestId], references: [id], onDelete: Cascade)
+  step           Int
+  approverRole   String         // UserRole
+  approverId     String?
+  action         String         // ApprovalAction
+  comment        String?        @db.NVarChar(Max)
+  rejectReasonId String?
+  rejectReason   LeaveRejectReason? @relation(fields: [rejectReasonId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  actedAt        DateTime       @default(now())
+}
+
+model LeaveRejectReason {
+  id        String          @id @default(cuid())
+  code      String          @unique
+  label     String          // ข้อความที่แสดงใน dropdown
+  isActive  Boolean         @default(true)
+  sortOrder Int             @default(0)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  approvals LeaveApproval[]
+}
+
+model BusRoute {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  route       String?
+  note        String?
+  isActive    Boolean  @default(true)
+  otRequests  OTRequest[]
+  otEmployees OTRequestEmployee[]
+  defaultForEmployees Employee[] @relation("EmployeeDefaultBusRoute")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model OTRequest {
+  id              String     @id @default(cuid())
+  requestNo       String     @unique
+  creatorId       String
+  creator         Employee   @relation("OTCreator", fields: [creatorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  side            String     // Side
+  otDate          DateTime
+  startTime       String
+  endTime         String
+  totalHours      Float
+  isHoliday       Boolean    @default(false)
+  /// "DAY" | "NIGHT" — used for shift filter in reports.
+  shift           String     @default("DAY")
+  workDescription String?    @db.NVarChar(Max)
+  busRouteId      String?
+  busRoute        BusRoute?  @relation(fields: [busRouteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  status          String     @default("PENDING_DEPT_MGR") // OTStatus
+  hrModifiedNote  String?    @db.NVarChar(Max)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  employees       OTRequestEmployee[]
+  approvals       OTApproval[]
+  cancellations   OTCancellation[]
+  memos           OTMemo[]
+}
+
+model OTRequestEmployee {
+  id          String    @id @default(cuid())
+  otRequestId String
+  otRequest   OTRequest @relation(fields: [otRequestId], references: [id], onDelete: Cascade)
+  employeeId  String
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  attended    Boolean   @default(true)
+  actualHours Float?
+  note        String?
+  /// Per-employee work description. NULL = fallback to OTRequest.workDescription.
+  workDescription String? @db.NVarChar(Max)
+  busRouteId  String?
+  busRoute    BusRoute? @relation(fields: [busRouteId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// Per-employee approval status: "PENDING" | "APPROVED" | "REJECTED"
+  /// Lets the approver pick which employees to approve/reject individually.
+  approvalStatus String @default("PENDING")
+
+  @@unique([otRequestId, employeeId])
+}
+
+model OTApproval {
+  id           String         @id @default(cuid())
+  otRequestId  String
+  otRequest    OTRequest      @relation(fields: [otRequestId], references: [id], onDelete: Cascade)
+  step         Int
+  approverRole String         // UserRole
+  approverId   String?
+  action       String         // ApprovalAction
+  comment      String?        @db.NVarChar(Max)
+  actedAt      DateTime       @default(now())
+}
+
+model OTCancellation {
+  id            String    @id @default(cuid())
+  otRequestId   String
+  otRequest     OTRequest @relation(fields: [otRequestId], references: [id], onDelete: Cascade)
+  employeeId    String
+  requestedById String
+  reason        String    @db.NVarChar(Max)
+  status        String    @default("PENDING")
+  hrComment     String?   @db.NVarChar(Max)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model OTMemo {
+  id           String    @id @default(cuid())
+  otRequestId  String
+  otRequest    OTRequest @relation(fields: [otRequestId], references: [id], onDelete: Cascade)
+  employeeId   String
+  reportedById String
+  memoText     String    @db.NVarChar(Max)
+  status       String    @default("PENDING")
+  hrComment    String?   @db.NVarChar(Max)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Holiday {
+  id        String   @id @default(cuid())
+  date      DateTime @unique
+  name      String
+  createdAt DateTime @default(now())
+}
+
+model SystemSetting {
+  id        String @id @default(cuid())
+  key       String @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  toEmail   String
+  ccEmail   String?
+  subject   String   @db.NVarChar(500)
+  body      String   @db.NVarChar(Max)
+  status    String
+  errorMsg  String?  @db.NVarChar(Max)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  detail    String?  @db.NVarChar(Max)
+  createdAt DateTime @default(now())
+}

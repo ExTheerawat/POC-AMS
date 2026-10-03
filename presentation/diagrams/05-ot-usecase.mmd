@@ -1,0 +1,34 @@
+flowchart LR
+    subgraph SUP["▌ Supervisor"]
+        direction TB
+        a1(["สร้างใบ OT (proxy)"]):::s
+        a2(["เลือกพนักงาน + สายรถ"]):::s
+        a3(["Cross-dept Request"]):::s
+        a4(["Memo ไม่มาทำ OT"]):::s
+    end
+    subgraph DM["▌ Dept Manager"]
+        direction TB
+        b1(["Approve / Reject รายคน"]):::n
+        b2(["อนุมัติ Step 1"]):::n
+        b3(["Bulk Approve / Reject"]):::n
+    end
+    subgraph FM["▌ Factory Manager"]
+        direction TB
+        c1(["อนุมัติ Step 2 (ผลิต)"]):::n
+        c2(["Approve / Reject รายคน"]):::n
+    end
+    subgraph HR["▌ HR Admin"]
+        direction TB
+        d1(["อนุมัติยกเลิก OT"]):::g
+        d2(["จัดการสายรถ + default"]):::g
+        d3(["Bus Route Summary"]):::g
+        d4(["Export + Filter กะ"]):::g
+    end
+
+    classDef s fill:#FFF7E6,stroke:#B7791F,stroke-width:1.5px,color:#111827
+    classDef n fill:#EEF2F7,stroke:#1E3A5F,stroke-width:1.5px,color:#111827
+    classDef g fill:#FFF7E6,stroke:#B7791F,stroke-width:1.5px,color:#111827
+    style SUP fill:#FFFFFF,stroke:#B7791F,stroke-width:2px,color:#B7791F
+    style DM fill:#FFFFFF,stroke:#1E3A5F,stroke-width:2px,color:#1E3A5F
+    style FM fill:#FFFFFF,stroke:#1E3A5F,stroke-width:2px,color:#1E3A5F
+    style HR fill:#FFFFFF,stroke:#B7791F,stroke-width:2px,color:#B7791F

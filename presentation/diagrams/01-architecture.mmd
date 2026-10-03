@@ -1,0 +1,38 @@
+flowchart TB
+    subgraph CLIENT["CLIENT LAYER"]
+        BR["Browser — Chrome / Edge / Safari<br/><br/>Next.js 14 + React 18<br/>Tailwind CSS + shadcn/ui"]
+    end
+
+    subgraph APP["APPLICATION LAYER — Node.js 20"]
+        WEB["Next.js App Server<br/>Server Actions + Middleware"]
+        AUTH["NextAuth.js v5<br/>JWT + bcryptjs"]
+        ORM["Prisma 5 ORM"]
+        MAIL["Nodemailer"]
+        XLSX["ExcelJS"]
+    end
+
+    subgraph DATA["DATA LAYER"]
+        DB[("Microsoft SQL Server 2019<br/>16 Tables<br/>Master · Transaction · Audit")]
+    end
+
+    SMTP["SMTP Server<br/>Internal / Office 365"]
+    BACKUP["Daily Backup<br/>SQL Maintenance Plan"]
+
+    BR -->|HTTPS| WEB
+    WEB --> AUTH
+    WEB --> ORM
+    WEB --> MAIL
+    WEB --> XLSX
+    ORM -->|SQL| DB
+    MAIL -->|SMTP| SMTP
+    DB -.->|nightly| BACKUP
+
+    classDef client fill:#EFF6FF,stroke:#2C5282,stroke-width:2px,color:#111827
+    classDef app fill:#FFFFFF,stroke:#1E3A5F,stroke-width:2px,color:#111827
+    classDef data fill:#FEF3C7,stroke:#B7791F,stroke-width:2px,color:#111827
+    classDef ext fill:#F3F4F6,stroke:#6B7280,stroke-width:1px,color:#374151
+
+    class BR client
+    class WEB,AUTH,ORM,MAIL,XLSX app
+    class DB data
+    class SMTP,BACKUP ext

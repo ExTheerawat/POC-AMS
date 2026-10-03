@@ -1,0 +1,15 @@
+sequenceDiagram
+    participant S as หัวหน้า (ผู้สร้าง)
+    participant SYS as AMS System
+    participant M as ผจก.แผนก
+    participant C as ผู้สร้าง / พนักงาน
+    participant HR as HR Admin
+
+    S->>SYS: สร้างใบลา / OT
+    SYS->>M: Email "รออนุมัติ"
+    SYS-->>HR: CC
+    M->>SYS: อนุมัติ / ปฏิเสธ
+    SYS->>C: Email "ผลการพิจารณา"
+    SYS-->>HR: CC
+    Note over SYS,HR: Cross-dept OT → FYI Email<br/>ผจก.แผนกต้นสังกัด (ไม่ต้อง approve)
+    SYS->>SYS: บันทึก Email Log + Audit Log
